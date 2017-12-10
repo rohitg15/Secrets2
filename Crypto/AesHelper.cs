@@ -17,7 +17,7 @@ namespace Crypto
         public byte[] EncryptBytes(byte[] plaintext)
         {
             Preconditions.CheckNotNull(plaintext);
-            
+
             using(MemoryStream ciphertextStream = new MemoryStream())
             {
                 using(CryptoStream cryptoStream = new CryptoStream(ciphertextStream,
@@ -55,7 +55,7 @@ namespace Crypto
 
             if ( (key.Length * 8 != algorithm.keySizeBits) || (iv.Length * 8 != algorithm.blockSizeBits) )
             {
-                string exMsg = String.Format(
+                string msg = String.Format(
                                             "Invalid crypto parameter lengths.",
                                             "Expected iv {0} bits and key {1} bits.", 
                                             "Got uv {2} bits and key {3} bits.",
@@ -64,15 +64,21 @@ namespace Crypto
                                             key.Length,
                                             iv.Length
                                             );
-                throw new CryptographicException(exMsg);
+                throw new CryptographicException(msg);
             }
             switch (algorithm.algorithmType)
             {
-                default:
+                case EncryptionAlgorithmType.AES_CBC:
                 {
                     this.cipher.Mode = CipherMode.CBC;
                     this.cipher.Padding = PaddingMode.PKCS7;
                     break;
+                }
+                default:
+                {
+                    string msg = String.Format("Unsupported rncryption algorithm {0}",
+                                                algorithm.algorithmType);
+                    throw new CryptographicException(msg);
                 }
             }
             this.cipher.Key = key;

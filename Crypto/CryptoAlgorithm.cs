@@ -32,6 +32,7 @@ namespace Crypto
    public enum EncryptionAlgorithmType 
    {
        AES_CBC,
-       AES_CTR
+       AES_CTR,
+       UNSUPPORTED
    };
 }
