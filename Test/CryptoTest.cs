@@ -26,19 +26,20 @@ namespace Test
         [Fact]
         public void TestEncryptShortString()
         {
-            
-            
+            // initialization
             IEncryptionHelper cryptoService = new AesHelper();
             cryptoService.Init(this.aesCbc, this.key, this.iv);
             string plaintext = "Hello World!";
-            byte[] plaintextBytes = StringUtils.GetBytes(plaintext);
-            byte[] cipherBytes = cryptoService.EncryptBytesAsync(plaintextBytes).GetAwaiter().GetResult();
 
-            byte[] decryptedBytes = cryptoService.DecryptBytesAsync(cipherBytes).GetAwaiter().GetResult();
+            // when
+            byte[] plaintextBytes = StringUtils.GetBytes(plaintext);
+            byte[] cipherBytes = cryptoService.EncryptBytes(plaintextBytes);
+
+            byte[] decryptedBytes = cryptoService.DecryptBytes(cipherBytes);
             string decryptedPlaintext = StringUtils.GetString(decryptedBytes);
 
+            // then
             Assert.Equal(decryptedPlaintext, plaintext);
-
         }
     }
 }

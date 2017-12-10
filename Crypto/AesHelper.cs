@@ -14,13 +14,10 @@ namespace Crypto
         {
             this.cipher = Aes.Create();
         }
-        public async Task<byte[]> EncryptBytesAsync(byte[] plaintext)
+        public byte[] EncryptBytes(byte[] plaintext)
         {
-            if (plaintext == null)
-            {
-                throw new ArgumentNullException("plaintext cannot be null.");
-            }
-
+            Preconditions.CheckNotNull(plaintext);
+            
             using(MemoryStream ciphertextStream = new MemoryStream())
             {
                 using(CryptoStream cryptoStream = new CryptoStream(ciphertextStream,
@@ -28,34 +25,34 @@ namespace Crypto
                                                                    CryptoStreamMode.Write
                                                                     ))
                 {
-                    await cryptoStream.WriteAsync(plaintext, 0, plaintext.Length);
+                    cryptoStream.Write(plaintext, 0, plaintext.Length);
                 }
                 return ciphertextStream.ToArray();
             }
         }
 
-        public async Task<byte[]> DecryptBytesAsync(byte[] ciphertext)
+        public byte[] DecryptBytes(byte[] ciphertext)
         {
+            Preconditions.CheckNotNull(ciphertext);
+
             using(MemoryStream plainStream = new MemoryStream())
             {
                 using(CryptoStream cryptoStream = new CryptoStream(plainStream,
                                                                     this.cipher.CreateDecryptor(),
                                                                     CryptoStreamMode.Write))
                 {
-                    await cryptoStream.WriteAsync(ciphertext, 0, ciphertext.Length);
+                    cryptoStream.Write(ciphertext, 0, ciphertext.Length);
                 }
                 return plainStream.ToArray();
             }
         }
 
-        public byte[] GetCiphertext()
-        {
-            throw new NotImplementedException();
-        }
-
         public void Init(EncryptionAlgorithm algorithm, byte[] key, byte[] iv)
         {
-            // Preconditions NULL check
+            Preconditions.CheckNotNull(algorithm);
+            Preconditions.CheckNotNull(key);
+            Preconditions.CheckNotNull(iv);
+
             if ( (key.Length * 8 != algorithm.keySizeBits) || (iv.Length * 8 != algorithm.blockSizeBits) )
             {
                 string exMsg = String.Format(
