@@ -54,18 +54,6 @@ namespace Test
         }
 
         [Fact]
-        public void TestInitUnknownAlgorithm()
-        {
-            IEncryptionHelper cryptoService = new AesHelper();
-            EncryptionAlgorithm unsupportedAlgorithm = 
-                    new EncryptionAlgorithm(EncryptionAlgorithmType.UNSUPPORTED);
-            Assert.Throws<CryptographicException>(
-                    () => 
-                        cryptoService.Init(unsupportedAlgorithm, this.key, this.iv)
-                );
-        }
-
-        [Fact]
         public void TestInitInvalidKeyLength()
         {
             IEncryptionHelper cryptoService = new AesHelper();

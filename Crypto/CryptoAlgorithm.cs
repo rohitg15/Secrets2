@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+
 namespace Crypto
 {
 
@@ -29,10 +31,50 @@ namespace Crypto
 
         }
     }
+
+    public class MacAlgorithm
+    {
+        public int keySizeBits { get; set; }
+        public MacAlgorithmType macType { get; set; }
+
+        public HMAC mac { get; set; }
+
+        public MacAlgorithm(MacAlgorithmType algorithmType)
+        {
+            this.macType = algorithmType;
+
+            switch(this.macType)
+            {
+                case MacAlgorithmType.HMAC_SHA256:
+                {
+                    this.keySizeBits = 256;
+                    this.mac = new HMACSHA256();
+                    break;
+                }
+                case MacAlgorithmType.HMAC_SHA512:
+                {
+                    this.keySizeBits = 512;
+                    this.mac = new HMACSHA512();
+                    break;
+                }
+            }
+        }
+
+        public HMAC GetMacAlgorithm()
+        {
+            return this.mac;
+        }
+    }
+
    public enum EncryptionAlgorithmType 
    {
        AES_CBC,
-       AES_CTR,
-       UNSUPPORTED
+       AES_CTR
+   };
+
+   public enum MacAlgorithmType
+   {
+       HMAC_SHA256,
+       HMAC_SHA512
    };
 }
