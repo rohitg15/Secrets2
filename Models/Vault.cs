@@ -15,6 +15,10 @@ namespace Models
         public Vault(string name)
         {
             this.vaultName = Preconditions.CheckNotNull(name);
+            if ( name == String.Empty )
+            {
+                throw new ArgumentException("Vault must have a name. Empty string is not allowed for vault name.");
+            }
             this.secrets = new Dictionary<string, Secret>();
             this.tagIndex = new Dictionary<string, List<string> >();
         }
@@ -23,6 +27,14 @@ namespace Models
         {
             Preconditions.CheckNotNull(secret);
 
+            // check if it already exists
+            if (this.secrets.ContainsKey(secret.secretId))
+            {
+                string msg = String.Format("Secret with id {0} already exists.", secret.secretId);
+                throw new ArgumentException(msg);
+            }
+
+            // update secrets and tagIndex
             this.secrets.Add(secret.secretId, secret);
             if ( !this.tagIndex.ContainsKey(secret.tag) )
             {
@@ -50,13 +62,13 @@ namespace Models
             throw new KeyNotFoundException(String.Format("Secret with id {0} not found", secretId));
         }
 
-        public IEnumerable<Secret> getSecretsByTag(string tag)
+        public ICollection<Secret> GetSecretsByTag(string tag)
         {
             Preconditions.CheckNotNull(tag);
 
             if ( this.tagIndex.ContainsKey(tag) )
             {
-                IEnumerable<string> secretIds = this.tagIndex[tag];
+                ICollection<string> secretIds = this.tagIndex[tag];
                 List<Secret> tagSecrets = new List<Secret>();
                 foreach (var id in secretIds)
                 {
@@ -65,6 +77,11 @@ namespace Models
                 return tagSecrets;
             }
             throw new KeyNotFoundException(String.Format("Tag with name {0} was not found", tag));
+        }
+
+        public int GetNumSecrets()
+        {
+            return this.secrets.Count;
         }
     }
 }
