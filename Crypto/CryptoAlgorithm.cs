@@ -1,7 +1,24 @@
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Utils;
 
 namespace Crypto
 {
+
+
+    public class CryptoAlgorithms
+    {
+        public EncryptionAlgorithm encAlg { get; set; }
+        public MacAlgorithm macAlg { get; set; }
+        public KdfAlgorithm kdfAlg { get; set; }
+
+        public CryptoAlgorithms(EncryptionAlgorithm enc, MacAlgorithm mac, KdfAlgorithm kdf)
+        {
+            this.encAlg = Preconditions.CheckNotNull(enc);
+            this.macAlg = Preconditions.CheckNotNull(mac);
+            this.kdfAlg = Preconditions.CheckNotNull(kdf);
+        }
+    }
 
     public class EncryptionAlgorithm
     {
@@ -12,7 +29,7 @@ namespace Crypto
         public EncryptionAlgorithm(EncryptionAlgorithmType type)
         {
             // Check null
-            this.algorithmType = type;    
+            this.algorithmType = Preconditions.CheckNotNull(type);
             switch (this.algorithmType)
             {
                 case EncryptionAlgorithmType.AES_CBC:
@@ -41,7 +58,7 @@ namespace Crypto
 
         public MacAlgorithm(MacAlgorithmType algorithmType)
         {
-            this.macType = algorithmType;
+            this.macType = Preconditions.CheckNotNull(algorithmType);
 
             switch(this.macType)
             {
@@ -64,6 +81,34 @@ namespace Crypto
         {
             return this.mac;
         }
+    }
+
+    public class KdfAlgorithm
+    {
+        public KeyDerivationPrf prf { get; set; }
+
+        public int saltSizeBytes { get; set; }
+
+        public int subKeySizeBytes { get; set; }
+
+        public int iterCount { get; set; }
+
+        public KdfAlgorithm(KeyDerivationPrf prf, int saltSize = 32, int subkeySize = 32, int iterCount = 10000)
+        {
+            this.prf = Preconditions.CheckNotNull(prf);
+            switch (this.prf)
+            {
+                case KeyDerivationPrf.HMACSHA1:
+                {
+                    throw new CryptographicException("Unsupported algorithm HmacSha1 for PRF");
+                }
+            }
+            this.saltSizeBytes = saltSize;
+            this.subKeySizeBytes = subkeySize;
+            this.iterCount = iterCount;
+        }
+        
+
     }
 
    public enum EncryptionAlgorithmType 
