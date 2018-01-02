@@ -58,7 +58,7 @@ namespace Crypto
                 string msg = String.Format(
                                             "Invalid crypto parameter lengths.",
                                             "Expected iv {0} bits and key {1} bits.", 
-                                            "Got uv {2} bits and key {3} bits.",
+                                            "Got iv {2} bits and key {3} bits.",
                                             algorithm.blockSizeBits,
                                             algorithm.keySizeBits,
                                             key.Length,

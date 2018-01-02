@@ -164,5 +164,66 @@ namespace Test
             Assert.NotEqual(cipherBytes1, cipherBytes2);
         }
 
+        [Fact]
+        public void TestAesCbcUnpaddedMessage()
+        {
+            // initialize
+            IEncryptionHelper cryptoService = new AesHelper();
+            var iv = new byte[16];
+            var csprng = RandomNumberGenerator.Create();
+            csprng.GetBytes(iv, 0, iv.Length);
+            var plaintextBytes = new byte[13];
+            cryptoService.Init(this.aesCbc, this.key, iv);
+
+            // when
+            var cipherBytes = cryptoService.EncryptBytes(plaintextBytes);
+
+            // then
+            Assert.Equal(16, cipherBytes.Length);
+        }
+
+        [Fact]
+        public void TestAesCbcDecryptBytes()
+        {
+            // initialize
+            IEncryptionHelper cryptoService = new AesHelper();
+            var iv = new byte[16];
+            var csprng = RandomNumberGenerator.Create();
+            csprng.GetBytes(iv, 0, iv.Length);
+            var plaintextBytes = new byte[13];
+            cryptoService.Init(this.aesCbc, this.key, iv);
+
+            // when
+            var cipherBytes = cryptoService.EncryptBytes(plaintextBytes);
+            var decryptedPlainBytes = cryptoService.DecryptBytes(cipherBytes);
+
+            // then
+            Assert.Equal(16, cipherBytes.Length);
+            Assert.Equal(plaintextBytes.Length, decryptedPlainBytes.Length);
+            Assert.Equal(plaintextBytes, decryptedPlainBytes);
+        }
+
+        [Fact]
+        public void TestAesCbcDecryptBytesLargeMessage()
+        {
+            // initialize
+            IEncryptionHelper cryptoService = new AesHelper();
+            var iv = new byte[16];
+            var csprng = RandomNumberGenerator.Create();
+            csprng.GetBytes(iv, 0, iv.Length);
+            var plaintextBytes = new byte[10000];
+            cryptoService.Init(this.aesCbc, this.key, iv);
+
+            // when
+            var cipherBytes = cryptoService.EncryptBytes(plaintextBytes);
+            var decryptedPlainBytes = cryptoService.DecryptBytes(cipherBytes);
+
+            // then
+            Assert.Equal(10016, cipherBytes.Length);
+            Assert.Equal(plaintextBytes.Length, decryptedPlainBytes.Length);
+            Assert.Equal(plaintextBytes, decryptedPlainBytes);   
+        }
+
+
     }
 }

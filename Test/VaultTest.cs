@@ -15,9 +15,9 @@ namespace Test
         public VaultTest()
         {
             this.vault = new Vault("Test");
-            this.validSecret1 = new Secret("secretId", "b64EncryptedSecret", "b64Salt", DateTime.UtcNow, DateTime.UtcNow, "tag", "mac");
-            this.validSecret2 = new Secret("secretId", "b64EncryptedSecret", "b64Salt", DateTime.UtcNow, DateTime.UtcNow, "tag", "mac");
-            this.validSecret3 = new Secret("secretId3", "b64EncryptedSecret", "b64Salt", DateTime.UtcNow, DateTime.UtcNow, "tag", "mac");
+            this.validSecret1 = new Secret("b64AlgIds", "secretId", "b64EncryptedSecret", "b64Salt", "ivOrNonce", DateTime.UtcNow, "tag", "mac");
+            this.validSecret2 = new Secret("b64AlgIds","secretId", "b64EncryptedSecret", "b64Salt", "ivOrNonce", DateTime.UtcNow, "tag", "mac");
+            this.validSecret3 = new Secret("b64AlgIds","secretId3", "b64EncryptedSecret", "b64Salt", "ivOrNonce", DateTime.UtcNow, "tag", "mac");
         }
 
         [Fact]

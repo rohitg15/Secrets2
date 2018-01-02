@@ -1,5 +1,6 @@
 
 using System;
+using System.Text;
 
 namespace Utils
 {
@@ -8,16 +9,15 @@ namespace Utils
         public static byte[] GetBytes(string str)
         {
             Preconditions.CheckNotNull(str);
-            byte[] bytes = new byte[str.Length * sizeof(char)];
-            System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
+            byte[] bytes = Encoding.ASCII.GetBytes(str);
             return bytes;
         }
 
         public static string GetString(byte[] bytes)
         {
             Preconditions.CheckNotNull(bytes);
-            char[] chars = new char[bytes.Length / sizeof(char)];
-            System.Buffer.BlockCopy(bytes, 0, chars, 0, bytes.Length);
+            var encoding = Encoding.ASCII;
+            char[] chars = encoding.GetChars(bytes);
             return new string(chars);
         }
 
@@ -28,7 +28,7 @@ namespace Utils
 
         public static byte[] GetBytesFromBase64(string b64Encoded)
         {
-            return Convert.FromBase64String(Convert.ToBase64String(System.Text.Encoding.Unicode.GetBytes(b64Encoded)));
+            return Convert.FromBase64String(b64Encoded);
         }
     }
 }
