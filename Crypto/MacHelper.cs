@@ -44,10 +44,15 @@ namespace Crypto
             Preconditions.CheckNotNull(mac);
             
             byte[] expectedMac = this.GetMac(message);
-            uint diff = (uint)expectedMac.Length ^ (uint)mac.Length;
+            if (expectedMac.Length != mac.Length)
+            {
+                return false;
+            }
+
+            int diff = 0;
             for(int i = 0; i < expectedMac.Length && i < mac.Length; ++i)
             {
-                diff |= (uint)expectedMac[i] ^ (uint)mac[i];
+                diff |= (int)expectedMac[i] - (int)mac[i];
             }
             return (diff == 0);
         }
