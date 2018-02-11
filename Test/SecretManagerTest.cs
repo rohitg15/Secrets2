@@ -412,6 +412,48 @@ namespace Test
         }
 
         [Fact]
+        public void TestProtectSameSecretCbcHs512kdf512()
+        {
+            // given
+            string password = "Never Use this!";
+            CryptoAlgorithms alg = new CryptoAlgorithms(this.aesCbc, this.hs512, this.kdfHs512);
+            string secretId = "secretId";
+            byte[] secretBytes = Enumerable.Repeat((byte)0x10, 16).ToArray();
+            string tag = "tag";
+
+            // when
+            Secret secret1 = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
+            Secret secret2 = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
+
+            // then
+            Assert.NotEqual(secret1.b64IvOrNonce, secret2.b64IvOrNonce);
+            Assert.NotEqual(secret1.b64Salt, secret2.b64Salt);
+            Assert.NotEqual(secret1.b64EncryptedSecret, secret2.b64EncryptedSecret);
+            Assert.NotEqual(secret1.b64Mac, secret2.b64Mac);
+        }
+
+        [Fact]
+        public void TestProtectSameSecretCbcHs256kdf256()
+        {
+            // given
+            string password = "Never Use this!";
+            CryptoAlgorithms alg = new CryptoAlgorithms(this.aesCbc, this.hs256, this.kdfHs256);
+            string secretId = "secretId";
+            byte[] secretBytes = Enumerable.Repeat((byte)0x10, 16).ToArray();
+            string tag = "tag";
+
+            // when
+            Secret secret1 = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
+            Secret secret2 = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
+
+            // then
+            Assert.NotEqual(secret1.b64IvOrNonce, secret2.b64IvOrNonce);
+            Assert.NotEqual(secret1.b64Salt, secret2.b64Salt);
+            Assert.NotEqual(secret1.b64EncryptedSecret, secret2.b64EncryptedSecret);
+            Assert.NotEqual(secret1.b64Mac, secret2.b64Mac);
+        }
+
+        [Fact]
         public void TestUnprotectNullPassword()
         {
             string password = null;
@@ -562,6 +604,144 @@ namespace Test
                     this.secretsManager.Unprotect(ref password, secret)
             );
         }
+
+
+        [Fact]
+        public void TestUnProtectSecret()
+        {
+            // given
+            string password = "Never Use this!";
+            CryptoAlgorithms alg = new CryptoAlgorithms(this.aesCbc, this.hs512, this.kdfHs512);
+            string secretId = "secretId";
+            byte[] secretBytes = Enumerable.Repeat((byte)0x10, 16).ToArray();
+            string tag = "tag";
+
+            // when
+            Secret secret = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
+            byte[] retrievedSecret = this.secretsManager.Unprotect(ref password, secret);
+            
+            // then
+            Assert.Equal(retrievedSecret, secretBytes);
+        }
+
+        [Fact]
+        public void TestUnProtectSecretWrongPassword()
+        {
+            // given
+            string password = "Never Use this!";
+            CryptoAlgorithms alg = new CryptoAlgorithms(this.aesCbc, this.hs512, this.kdfHs512);
+            string secretId = "secretId";
+            byte[] secretBytes = Enumerable.Repeat((byte)0x10, 16).ToArray();
+            string tag = "tag";
+            string wrongPassword = "Never use this$";
+
+            // when
+            Secret secret = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
+
+            // then - signature validation should fail
+            Assert.Throws<ApplicationException>(
+                () => 
+                    this.secretsManager.Unprotect(ref wrongPassword, secret)
+            );
+        }
+
+        [Fact]
+        public void TestUnProtectSecretTamperedSalt()
+        {
+            // given
+            string password = "Never Use this!";
+            CryptoAlgorithms alg = new CryptoAlgorithms(this.aesCbc, this.hs512, this.kdfHs512);
+            string secretId = "secretId";
+            byte[] secretBytes = Enumerable.Repeat((byte)0x10, 16).ToArray();
+            string tag = "tag";
+            string wrongPassword = "Never use this$";
+
+            // when
+            Secret secret = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
+            byte[] saltBytes = StringUtils.GetBytesFromBase64(secret.b64Salt);
+            saltBytes[saltBytes.Length - 1] = (byte)(saltBytes[saltBytes.Length - 1] + 0x1);
+            secret.b64Salt = StringUtils.GetBase64String(saltBytes);
+
+            // then - Signature validation should fail
+            Assert.Throws<ApplicationException>(
+                () => 
+                    this.secretsManager.Unprotect(ref wrongPassword, secret)
+            );
+        }
+
+
+        [Fact]
+        public void TestUnProtectSecretTamperedPayload()
+        {
+            // given
+            string password = "Never Use this!";
+            CryptoAlgorithms alg = new CryptoAlgorithms(this.aesCbc, this.hs512, this.kdfHs512);
+            string secretId = "secretId";
+            byte[] secretBytes = Enumerable.Repeat((byte)0x10, 16).ToArray();
+            string tag = "tag";
+            string wrongPassword = "Never use this$";
+
+            // when
+            Secret secret = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
+            byte[] payloadBytes = StringUtils.GetBytesFromBase64(secret.b64EncryptedSecret);
+            payloadBytes[payloadBytes.Length - 1] = (byte)(payloadBytes[payloadBytes.Length - 1] + 0x1);
+            secret.b64EncryptedSecret = StringUtils.GetBase64String(payloadBytes);
+
+            // then - Signature validation should fail
+            Assert.Throws<ApplicationException>(
+                () => 
+                    this.secretsManager.Unprotect(ref wrongPassword, secret)
+            );
+        }
+
+        [Fact]
+        public void TestUnProtectSecretTamperedIv()
+        {
+            // given
+            string password = "Never Use this!";
+            CryptoAlgorithms alg = new CryptoAlgorithms(this.aesCbc, this.hs512, this.kdfHs512);
+            string secretId = "secretId";
+            byte[] secretBytes = Enumerable.Repeat((byte)0x10, 16).ToArray();
+            string tag = "tag";
+            string wrongPassword = "Never use this$";
+
+            // when
+            Secret secret = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
+            byte[] ivBytes = StringUtils.GetBytesFromBase64(secret.b64IvOrNonce);
+            ivBytes[ivBytes.Length - 1] = (byte)(ivBytes[ivBytes.Length - 1] + 0x1);
+            secret.b64IvOrNonce = StringUtils.GetBase64String(ivBytes);
+
+            // then - Signature validation should fail
+            Assert.Throws<ApplicationException>(
+                () => 
+                    this.secretsManager.Unprotect(ref wrongPassword, secret)
+            );
+        }
+
+        [Fact]
+        public void TestUnProtectSecretTamperedId()
+        {
+            // given
+            string password = "Never Use this!";
+            CryptoAlgorithms alg = new CryptoAlgorithms(this.aesCbc, this.hs512, this.kdfHs512);
+            string secretId = "secretId";
+            byte[] secretBytes = Enumerable.Repeat((byte)0x10, 16).ToArray();
+            string tag = "tag";
+            string wrongPassword = "Never use this$";
+
+            // when
+            Secret secret = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
+            byte[] idBytes = StringUtils.GetBytes(secret.secretId);
+            idBytes[idBytes.Length - 1] = (byte)(idBytes[idBytes.Length - 1] + 0x1);
+            secret.b64IvOrNonce = StringUtils.GetBase64String(idBytes);
+
+            // then - Signature validation should fail
+            Assert.Throws<ApplicationException>(
+                () => 
+                    this.secretsManager.Unprotect(ref wrongPassword, secret)
+            );
+        }
+
 
     }
 }

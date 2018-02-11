@@ -155,7 +155,8 @@ namespace Crypto
             // check integrity first
             byte[] payload = GetCanonicalizedPayload(algIds, salt, ivOrNonce, secretId, ciphertext);
             this.macHelper.Init(cryptoAlg.macAlg, sessionKeys.validationKey);
-            if (this.macHelper.VerifyMac(expMac, payload) == false)
+            
+            if (this.macHelper.VerifyMac(payload, expMac) == false)
             {
                 throw new ApplicationException("Invalid Signature!");
             }
