@@ -1,5 +1,6 @@
 
 using System;
+using System.Linq;
 using System.Text;
 
 namespace Utils
@@ -29,6 +30,20 @@ namespace Utils
         public static byte[] GetBytesFromBase64(string b64Encoded)
         {
             return Convert.FromBase64String(b64Encoded);
+        }
+
+        public static string GetHexFromBytes(byte[] bytes)
+        {
+            string hexStr = BitConverter.ToString(bytes);
+            return hexStr.Replace("-", "");
+        }
+
+        public static byte[] GetBytesFromHex(string hexStr)
+        {
+            return Enumerable.Range(0, hexStr.Length)
+                     .Where(x => x % 2 == 0)
+                     .Select(x => Convert.ToByte(hexStr.Substring(x, 2), 16))
+                     .ToArray();
         }
     }
 }
