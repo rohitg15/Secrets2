@@ -27,7 +27,7 @@ namespace Crypto
             this.maxSecretIdBytes = 1024;
             this.iterCount = iterCount;
         }
-        public KeySet GetSessionKeys(SecureString password, CryptoAlgorithms alg)
+        public KeySet GetSessionKeys(ref SecureString password, CryptoAlgorithms alg)
         {
             Preconditions.CheckNotNull(password);
             Preconditions.CheckNotNull(alg);
@@ -37,10 +37,10 @@ namespace Crypto
             var csprng = RandomNumberGenerator.Create();
             csprng.GetBytes(salt);            
 
-            return DeriveSessionKeys(password, alg, salt);
+            return DeriveSessionKeys(ref password, alg, salt);
         }
 
-        public KeySet DeriveSessionKeys(SecureString password, CryptoAlgorithms alg, byte[] salt)
+        public KeySet DeriveSessionKeys(ref SecureString password, CryptoAlgorithms alg, byte[] salt)
         {
             Preconditions.CheckNotNull(password);
             Preconditions.CheckNotNull(alg);
@@ -89,7 +89,7 @@ namespace Crypto
             return payload;
         }
 
-        public Secret Protect(SecureString password, CryptoAlgorithms alg, string secretId, byte[] secretBytes, string tag = "Default")
+        public Secret Protect(ref SecureString password, CryptoAlgorithms alg, string secretId, byte[] secretBytes, string tag = "Default")
         {
            Preconditions.CheckNotNull(password);
            Preconditions.CheckNotNull(alg);
@@ -106,7 +106,7 @@ namespace Crypto
            }
 
            // Derive session keys to protect secret
-           KeySet sessionKeys = this.GetSessionKeys(password, alg);
+           KeySet sessionKeys = this.GetSessionKeys(ref password, alg);
         
            // Generate unique IV (or Nonce) for this secret based on given encryption algorithm
            byte[] iv = new byte[alg.encAlg.blockSizeBytes];
@@ -138,7 +138,7 @@ namespace Crypto
            return new Secret(b64AlgIds, secretId, b64EncryptedStr, b64Salt, b64Iv, DateTime.UtcNow, tag, b64Mac);
         }
 
-        public byte[] Unprotect(SecureString password, Secret secret)
+        public byte[] Unprotect(ref SecureString password, Secret secret)
         {
             Preconditions.CheckNotNull(password);
             Preconditions.CheckNotNull(secret);
@@ -153,7 +153,7 @@ namespace Crypto
             
             // Derive potential session keys from given data
             CryptoAlgorithms cryptoAlg = CryptoAlgorithms.InitFromAlgId(algIds);
-            KeySet sessionKeys = DeriveSessionKeys(password, cryptoAlg, salt);
+            KeySet sessionKeys = DeriveSessionKeys(ref password, cryptoAlg, salt);
 
             // check integrity first
             byte[] payload = GetCanonicalizedPayload(algIds, salt, ivOrNonce, secretId, ciphertext);

@@ -86,7 +86,7 @@ namespace Test
             );
 
             // when
-            Secret secret = secretsManager.Protect(password, alg, secretId, secretBytes, tag);
+            Secret secret = secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
 
             // then
             this.dataStore.WriteSecret(secret);
@@ -120,7 +120,7 @@ namespace Test
             );
 
             // when
-            Secret expectedSecret = secretsManager.Protect(password, alg, secretId, secretBytes, tag);
+            Secret expectedSecret = secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
             this.dataStore.WriteSecret(expectedSecret);
             Secret actualSecret = this.dataStore.ReadSecret(expectedSecret.secretId);
             
@@ -139,7 +139,7 @@ namespace Test
                 new AesHelper(),
                 new MacHelper()
             );
-            byte[] retrievedSecretBytes = decryptionManager.Unprotect(password, actualSecret);
+            byte[] retrievedSecretBytes = decryptionManager.Unprotect(ref password, actualSecret);
             Assert.Equal(secretBytes.Length, retrievedSecretBytes.Length);
             Assert.Equal(secretBytes, retrievedSecretBytes);
         }

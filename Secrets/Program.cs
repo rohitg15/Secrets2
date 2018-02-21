@@ -31,7 +31,7 @@ namespace Secrets
             );
         }
 
-        private static IStorage InitStorage(string rootDir = ".")
+        private static IStorage InitStorage(string rootDir = "db")
         {
             return new FileStorage(rootDir);
         }
@@ -60,6 +60,7 @@ namespace Secrets
                     Console.Write("*");
                 }
             }
+            password.MakeReadOnly();
             return password;
         }
 
@@ -115,10 +116,28 @@ namespace Secrets
                         Console.WriteLine("===== Get Secret =====");
                         Console.Write("Enter Secret id:");
                         string secretId = Console.ReadLine();
-                        Console.Write("\n");
+                        
+                        Secret secret = null;
+                        byte[] retrievedSecretBytes = null;
+                        try
+                        {
+                            secret = storageManager.ReadSecret(secretId);
+                        }
+                        catch(Exception)
+                        {
+                            Console.WriteLine("Secret with id {0} not found in db.", secretId);
+                            break;
+                        }
 
-                        Secret secret = storageManager.ReadSecret(secretId);
-                        byte[] retrievedSecretBytes = manager.Unprotect(passwd, secret);
+                        try
+                        {
+                            retrievedSecretBytes = manager.Unprotect(ref passwd, secret);
+                        }
+                        catch(Exception)
+                        {
+                            Console.WriteLine("Wrong Password. Secret Decryption failed!");
+                            return;
+                        }
                         string secretData = StringUtils.GetString(retrievedSecretBytes);
                         Console.WriteLine("Secret value > {0}", secretData);
                         Console.Write("\n");
@@ -136,7 +155,7 @@ namespace Secrets
                         string secretStr = Console.ReadLine();
                         Console.Write("\n");
 
-                        Console.Write("Enter tag(optional)");
+                        Console.Write("Enter tag(optional):");
                         string tag = Console.ReadLine();
                         if (String.IsNullOrEmpty(tag))
                         {
@@ -144,10 +163,19 @@ namespace Secrets
                         }
                         // check size
                         byte[] secretBytes = StringUtils.GetBytes(secretStr);
-                        Secret secret = manager.Protect(passwd, alg, secretId, secretBytes, tag);
-
-                        // write secret to persistent storage
-                        storageManager.WriteSecret(secret);
+                        Secret secret = null;
+                        
+                        try
+                        {
+                            secret = manager.Protect(ref passwd, alg, secretId, secretBytes, tag);
+                            // write secret to persistent storage
+                            storageManager.WriteSecret(secret);
+                        }
+                        catch(Exception)
+                        {
+                            Console.WriteLine("Error: Could not store secret!");
+                            return;
+                        }
                         Console.WriteLine("Stored Secret successfully!");
                         Console.Write("\n");
                         break;

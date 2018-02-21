@@ -91,7 +91,7 @@ namespace Test
             this.alg1 = new CryptoAlgorithms(this.aesCbc, this.hs256, this.kdfHs256);
 
             // when
-            KeySet keys = this.secretsManager.GetSessionKeys(password, this.alg1);
+            KeySet keys = this.secretsManager.GetSessionKeys(ref password, this.alg1);
 
             // then
             Assert.Equal(this.alg1.encAlg.keySizeBytes,  keys.encryptionKey.Length);
@@ -108,7 +108,7 @@ namespace Test
             this.alg1 = new CryptoAlgorithms(this.aesCbc, this.hs512, this.kdfHs256);
 
             // when
-            KeySet keys = this.secretsManager.GetSessionKeys(password, this.alg1);
+            KeySet keys = this.secretsManager.GetSessionKeys(ref password, this.alg1);
 
             // then
             Assert.Equal(this.alg1.encAlg.keySizeBytes,  keys.encryptionKey.Length);
@@ -125,7 +125,7 @@ namespace Test
             this.alg1 = new CryptoAlgorithms(this.aesCbc, this.hs256, this.kdfHs512);
 
             // when
-            KeySet keys = this.secretsManager.GetSessionKeys(password, this.alg1);
+            KeySet keys = this.secretsManager.GetSessionKeys(ref password, this.alg1);
 
             // then
             Assert.Equal(this.alg1.encAlg.keySizeBytes,  keys.encryptionKey.Length);
@@ -142,7 +142,7 @@ namespace Test
             this.alg1 = new CryptoAlgorithms(this.aesCbc, this.hs512, this.kdfHs512);
 
             // when
-            KeySet keys = this.secretsManager.GetSessionKeys(password, this.alg1);
+            KeySet keys = this.secretsManager.GetSessionKeys(ref password, this.alg1);
 
             // then
             Assert.Equal(this.alg1.encAlg.keySizeBytes,  keys.encryptionKey.Length);
@@ -158,8 +158,8 @@ namespace Test
             this.alg1 = new CryptoAlgorithms(this.aesCbc, this.hs256, this.kdfHs256);
 
             // when
-            KeySet keys = this.secretsManager.GetSessionKeys(password, this.alg1);
-            KeySet derivedKeys = this.secretsManager.DeriveSessionKeys(password, this.alg1, keys.salt);
+            KeySet keys = this.secretsManager.GetSessionKeys(ref password, this.alg1);
+            KeySet derivedKeys = this.secretsManager.DeriveSessionKeys(ref password, this.alg1, keys.salt);
 
             // then
             Assert.Equal(keys.encryptionKey, derivedKeys.encryptionKey);
@@ -174,8 +174,8 @@ namespace Test
             this.alg1 = new CryptoAlgorithms(this.aesCbc, this.hs256, this.kdfHs512);
 
             // when
-            KeySet keys = this.secretsManager.GetSessionKeys(password, this.alg1);
-            KeySet derivedKeys = this.secretsManager.DeriveSessionKeys(password, this.alg1, keys.salt);
+            KeySet keys = this.secretsManager.GetSessionKeys(ref password, this.alg1);
+            KeySet derivedKeys = this.secretsManager.DeriveSessionKeys(ref password, this.alg1, keys.salt);
 
             // then
             Assert.Equal(keys.encryptionKey, derivedKeys.encryptionKey);
@@ -190,8 +190,8 @@ namespace Test
             this.alg1 = new CryptoAlgorithms(this.aesCbc, this.hs512, this.kdfHs256);
 
             // when
-            KeySet keys = this.secretsManager.GetSessionKeys(password, this.alg1);
-            KeySet derivedKeys = this.secretsManager.DeriveSessionKeys(password, this.alg1, keys.salt);
+            KeySet keys = this.secretsManager.GetSessionKeys(ref password, this.alg1);
+            KeySet derivedKeys = this.secretsManager.DeriveSessionKeys(ref password, this.alg1, keys.salt);
 
             // then
             Assert.Equal(keys.encryptionKey, derivedKeys.encryptionKey);
@@ -206,8 +206,8 @@ namespace Test
             this.alg1 = new CryptoAlgorithms(this.aesCbc, this.hs512, this.kdfHs512);
 
             // when
-            KeySet keys = this.secretsManager.GetSessionKeys(password, this.alg1);
-            KeySet derivedKeys = this.secretsManager.DeriveSessionKeys(password, this.alg1, keys.salt);
+            KeySet keys = this.secretsManager.GetSessionKeys(ref password, this.alg1);
+            KeySet derivedKeys = this.secretsManager.DeriveSessionKeys(ref password, this.alg1, keys.salt);
 
             // then
             Assert.Equal(keys.encryptionKey, derivedKeys.encryptionKey);
@@ -222,14 +222,14 @@ namespace Test
             this.alg1 = new CryptoAlgorithms(this.aesCbc, this.hs512, this.kdfHs512);
 
             // when
-            KeySet keys = this.secretsManager.GetSessionKeys(password, this.alg1);
+            KeySet keys = this.secretsManager.GetSessionKeys(ref password, this.alg1);
             byte[] salt = new byte[keys.salt.Length - 1];
             Buffer.BlockCopy(keys.salt, 0, salt, 0, salt.Length);
 
             // then
             Assert.Throws<ArgumentException>(
                 () =>
-                    this.secretsManager.DeriveSessionKeys(password, this.alg1, salt)
+                    this.secretsManager.DeriveSessionKeys(ref password, this.alg1, salt)
             );
         }
 
@@ -359,7 +359,7 @@ namespace Test
             SecureString nullPassword = null;
             Assert.Throws<ArgumentNullException>(
                 () =>
-                    this.secretsManager.Protect(nullPassword, this.alg2, "secretid", secret)
+                    this.secretsManager.Protect(ref nullPassword, this.alg2, "secretid", secret)
             );
         }
 
@@ -369,7 +369,7 @@ namespace Test
             byte[] secret = Enumerable.Repeat((byte)0x10, 16).ToArray();
             Assert.Throws<ArgumentNullException>(
                 () =>
-                    this.secretsManager.Protect(password, null, "secretid", secret)
+                    this.secretsManager.Protect(ref password, null, "secretid", secret)
             );
         }
 
@@ -380,7 +380,7 @@ namespace Test
             byte[] secret = Enumerable.Repeat((byte)0x10, 16).ToArray();
             Assert.Throws<ArgumentNullException>(
                 () =>
-                    this.secretsManager.Protect(password, this.alg2, null, secret)
+                    this.secretsManager.Protect(ref password, this.alg2, null, secret)
             );
         }
 
@@ -390,7 +390,7 @@ namespace Test
         {
             Assert.Throws<ArgumentNullException>(
                 () =>
-                    this.secretsManager.Protect(password, this.alg2, "secretid", null)
+                    this.secretsManager.Protect(ref password, this.alg2, "secretid", null)
             );
         }
 
@@ -402,7 +402,7 @@ namespace Test
             string secretId = StringUtils.GetString(secretIdBytes);
             Assert.Throws<ArgumentOutOfRangeException>(
                 () =>
-                    this.secretsManager.Protect(password, this.alg2, secretId, secret)
+                    this.secretsManager.Protect(ref password, this.alg2, secretId, secret)
             );
         }
 
@@ -414,7 +414,7 @@ namespace Test
 
             Assert.Throws<ArgumentOutOfRangeException>(
                 () =>
-                    this.secretsManager.Protect(password, this.alg2, secretId, secret)
+                    this.secretsManager.Protect(ref password, this.alg2, secretId, secret)
             );
         }
 
@@ -428,8 +428,8 @@ namespace Test
             string tag = "tag";
 
             // when
-            Secret secret1 = this.secretsManager.Protect(password, alg, secretId, secretBytes, tag);
-            Secret secret2 = this.secretsManager.Protect(password, alg, secretId, secretBytes, tag);
+            Secret secret1 = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
+            Secret secret2 = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
 
             // then
             Assert.NotEqual(secret1.b64IvOrNonce, secret2.b64IvOrNonce);
@@ -448,8 +448,8 @@ namespace Test
             string tag = "tag";
 
             // when
-            Secret secret1 = this.secretsManager.Protect(password, alg, secretId, secretBytes, tag);
-            Secret secret2 = this.secretsManager.Protect(password, alg, secretId, secretBytes, tag);
+            Secret secret1 = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
+            Secret secret2 = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
 
             // then
             Assert.NotEqual(secret1.b64IvOrNonce, secret2.b64IvOrNonce);
@@ -466,7 +466,7 @@ namespace Test
 
             Assert.Throws<ArgumentNullException>(
                 () =>
-                    this.secretsManager.Unprotect(nullPassword, secret)
+                    this.secretsManager.Unprotect(ref nullPassword, secret)
             );
         }
 
@@ -476,7 +476,7 @@ namespace Test
         {
             Assert.Throws<ArgumentNullException>(
                 () =>
-                    this.secretsManager.Unprotect(password, null)
+                    this.secretsManager.Unprotect(ref password, null)
             );
         }
 
@@ -500,7 +500,7 @@ namespace Test
             
             Assert.Throws<FormatException>(
                 () =>
-                    this.secretsManager.Unprotect(password, secret)
+                    this.secretsManager.Unprotect(ref password, secret)
             );
         }
 
@@ -524,7 +524,7 @@ namespace Test
             
             Assert.Throws<FormatException>(
                 () =>
-                    this.secretsManager.Unprotect(password, secret)
+                    this.secretsManager.Unprotect(ref password, secret)
             );
         }
 
@@ -549,7 +549,7 @@ namespace Test
             
             Assert.Throws<FormatException>(
                 () =>
-                    this.secretsManager.Unprotect(password, secret)
+                    this.secretsManager.Unprotect(ref password, secret)
             );
         }
 
@@ -574,7 +574,7 @@ namespace Test
             
             Assert.Throws<FormatException>(
                 () =>
-                    this.secretsManager.Unprotect(password, secret)
+                    this.secretsManager.Unprotect(ref password, secret)
             );
         }
 
@@ -599,7 +599,7 @@ namespace Test
             
             Assert.Throws<FormatException>(
                 () =>
-                    this.secretsManager.Unprotect(password, secret)
+                    this.secretsManager.Unprotect(ref password, secret)
             );
         }
 
@@ -614,8 +614,8 @@ namespace Test
             string tag = "tag";
 
             // when
-            Secret secret = this.secretsManager.Protect(password, alg, secretId, secretBytes, tag);
-            byte[] retrievedSecret = this.secretsManager.Unprotect(password, secret);
+            Secret secret = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
+            byte[] retrievedSecret = this.secretsManager.Unprotect(ref password, secret);
             
             // then
             Assert.Equal(retrievedSecret, secretBytes);
@@ -630,14 +630,13 @@ namespace Test
             byte[] secretBytes = Enumerable.Repeat((byte)0x10, 16).ToArray();
             string tag = "tag";
 
-            Console.WriteLine("{0} : {1}", password.ToString(), wrongPassword.ToString());
             // when
-            Secret secret = this.secretsManager.Protect(password, alg, secretId, secretBytes, tag);
+            Secret secret = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
 
             // then - signature validation should fail
             Assert.Throws<ApplicationException>(
                 () => 
-                    this.secretsManager.Unprotect(wrongPassword, secret)
+                    this.secretsManager.Unprotect(ref wrongPassword, secret)
             );
         }
 
@@ -651,7 +650,7 @@ namespace Test
             string tag = "tag";
             
             // when
-            Secret secret = this.secretsManager.Protect(password, alg, secretId, secretBytes, tag);
+            Secret secret = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
             byte[] saltBytes = StringUtils.GetBytesFromBase64(secret.b64Salt);
             saltBytes[saltBytes.Length - 1] = (byte)(saltBytes[saltBytes.Length - 1] + 0x1);
             secret.b64Salt = StringUtils.GetBase64String(saltBytes);
@@ -659,7 +658,7 @@ namespace Test
             // then - Signature validation should fail
             Assert.Throws<ApplicationException>(
                 () => 
-                    this.secretsManager.Unprotect(wrongPassword, secret)
+                    this.secretsManager.Unprotect(ref wrongPassword, secret)
             );
         }
 
@@ -674,7 +673,7 @@ namespace Test
             string tag = "tag";
             
             // when
-            Secret secret = this.secretsManager.Protect(password, alg, secretId, secretBytes, tag);
+            Secret secret = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
             byte[] payloadBytes = StringUtils.GetBytesFromBase64(secret.b64EncryptedSecret);
             payloadBytes[payloadBytes.Length - 1] = (byte)(payloadBytes[payloadBytes.Length - 1] + 0x1);
             secret.b64EncryptedSecret = StringUtils.GetBase64String(payloadBytes);
@@ -682,7 +681,7 @@ namespace Test
             // then - Signature validation should fail
             Assert.Throws<ApplicationException>(
                 () => 
-                    this.secretsManager.Unprotect(wrongPassword, secret)
+                    this.secretsManager.Unprotect(ref wrongPassword, secret)
             );
         }
 
@@ -696,7 +695,7 @@ namespace Test
             string tag = "tag";
             
             // when
-            Secret secret = this.secretsManager.Protect(password, alg, secretId, secretBytes, tag);
+            Secret secret = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
             byte[] ivBytes = StringUtils.GetBytesFromBase64(secret.b64IvOrNonce);
             ivBytes[ivBytes.Length - 1] = (byte)(ivBytes[ivBytes.Length - 1] + 0x1);
             secret.b64IvOrNonce = StringUtils.GetBase64String(ivBytes);
@@ -704,7 +703,7 @@ namespace Test
             // then - Signature validation should fail
             Assert.Throws<ApplicationException>(
                 () => 
-                    this.secretsManager.Unprotect(wrongPassword, secret)
+                    this.secretsManager.Unprotect(ref wrongPassword, secret)
             );
         }
 
@@ -718,7 +717,7 @@ namespace Test
             string tag = "tag";
             
             // when
-            Secret secret = this.secretsManager.Protect(password, alg, secretId, secretBytes, tag);
+            Secret secret = this.secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
             byte[] idBytes = StringUtils.GetBytes(secret.secretId);
             idBytes[idBytes.Length - 1] = (byte)(idBytes[idBytes.Length - 1] + 0x1);
             secret.b64IvOrNonce = StringUtils.GetBase64String(idBytes);
@@ -726,7 +725,7 @@ namespace Test
             // then - Signature validation should fail
             Assert.Throws<ApplicationException>(
                 () => 
-                    this.secretsManager.Unprotect(wrongPassword, secret)
+                    this.secretsManager.Unprotect(ref wrongPassword, secret)
             );
         }
 
