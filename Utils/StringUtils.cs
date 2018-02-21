@@ -1,6 +1,8 @@
 
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security;
 using System.Text;
 
 namespace Utils
@@ -44,6 +46,14 @@ namespace Utils
                      .Where(x => x % 2 == 0)
                      .Select(x => Convert.ToByte(hexStr.Substring(x, 2), 16))
                      .ToArray();
+        }
+
+        public static string GetStringFromSecureString(SecureString secretString)
+        {
+            IntPtr stringPointer = Marshal.SecureStringToBSTR(secretString);
+            string normalString = Marshal.PtrToStringBSTR(stringPointer);
+            Marshal.ZeroFreeBSTR(stringPointer);
+            return normalString;
         }
     }
 }

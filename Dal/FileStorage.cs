@@ -70,7 +70,24 @@ namespace Dal
 
         public List<Secret> ListSecrets()
         {
-            throw new System.Exception("Not Implemented!");
+            // read all secret ids from the root Directory
+            List<Secret> secrets = new List<Secret>();
+            foreach(string file in Directory.EnumerateFiles(this.rootDir, "*.json"))
+            {
+                Secret secret = null;
+                try
+                {
+                    string secretJson = File.ReadAllText(file);
+                    secret = JsonConvert.DeserializeObject<Secret>(secretJson);
+                }
+                catch(System.Exception)
+                {
+                    Console.WriteLine("Corrupt/Bad database.");
+                    throw;
+                }
+                secrets.Add(secret);
+            }
+            return secrets;
         }
     }
 

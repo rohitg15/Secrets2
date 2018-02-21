@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using Models;
 using Crypto;
+using System.Security;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 
@@ -60,7 +61,17 @@ namespace Test
         public void WriteSecretValidSecret()
         {
             // given
-            string password = "Never Use this!";
+            SecureString password = new SecureString();
+            password.AppendChar('p');
+            password.AppendChar('a');
+            password.AppendChar('s');
+            password.AppendChar('s');
+            password.AppendChar('w');
+            password.AppendChar('0');
+            password.AppendChar('r');
+            password.AppendChar('d');
+            
+
             CryptoAlgorithms alg = new CryptoAlgorithms(
                 new EncryptionAlgorithm(EncryptionAlgorithmType.AES_CBC),
                 new MacAlgorithm(MacAlgorithmType.HMAC_SHA256),
@@ -75,7 +86,7 @@ namespace Test
             );
 
             // when
-            Secret secret = secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
+            Secret secret = secretsManager.Protect(password, alg, secretId, secretBytes, tag);
 
             // then
             this.dataStore.WriteSecret(secret);
@@ -85,7 +96,16 @@ namespace Test
         public void WriteSecretThenReadSecret()
         {
             // given
-            string password = "Never Use this!";
+            SecureString password = new SecureString();
+            password.AppendChar('p');
+            password.AppendChar('a');
+            password.AppendChar('s');
+            password.AppendChar('s');
+            password.AppendChar('w');
+            password.AppendChar('0');
+            password.AppendChar('r');
+            password.AppendChar('d');
+            
             CryptoAlgorithms alg = new CryptoAlgorithms(
                 new EncryptionAlgorithm(EncryptionAlgorithmType.AES_CBC),
                 new MacAlgorithm(MacAlgorithmType.HMAC_SHA256),
@@ -100,7 +120,7 @@ namespace Test
             );
 
             // when
-            Secret expectedSecret = secretsManager.Protect(ref password, alg, secretId, secretBytes, tag);
+            Secret expectedSecret = secretsManager.Protect(password, alg, secretId, secretBytes, tag);
             this.dataStore.WriteSecret(expectedSecret);
             Secret actualSecret = this.dataStore.ReadSecret(expectedSecret.secretId);
             
@@ -119,7 +139,7 @@ namespace Test
                 new AesHelper(),
                 new MacHelper()
             );
-            byte[] retrievedSecretBytes = decryptionManager.Unprotect(ref password, actualSecret);
+            byte[] retrievedSecretBytes = decryptionManager.Unprotect(password, actualSecret);
             Assert.Equal(secretBytes.Length, retrievedSecretBytes.Length);
             Assert.Equal(secretBytes, retrievedSecretBytes);
         }

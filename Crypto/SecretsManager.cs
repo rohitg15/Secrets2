@@ -5,6 +5,7 @@ using Utils;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using System.Security.Cryptography;
 using System;
+using System.Security;
 
 namespace Crypto
 {
@@ -16,6 +17,7 @@ namespace Crypto
         public int iterCount { get; set; }
         public IEncryptionHelper encHelper { get; set; }
         public IMacHelper macHelper { get; set; }
+
         public SecretsManager(IEncryptionHelper encHelper, IMacHelper macHelper, int iterCount = 1000)
         {
             this.encHelper = Preconditions.CheckNotNull(encHelper);
@@ -25,7 +27,7 @@ namespace Crypto
             this.maxSecretIdBytes = 1024;
             this.iterCount = iterCount;
         }
-        public KeySet GetSessionKeys(ref string password, CryptoAlgorithms alg)
+        public KeySet GetSessionKeys(SecureString password, CryptoAlgorithms alg)
         {
             Preconditions.CheckNotNull(password);
             Preconditions.CheckNotNull(alg);
@@ -35,10 +37,10 @@ namespace Crypto
             var csprng = RandomNumberGenerator.Create();
             csprng.GetBytes(salt);            
 
-            return DeriveSessionKeys(ref password, alg, salt);
+            return DeriveSessionKeys(password, alg, salt);
         }
 
-        public KeySet DeriveSessionKeys(ref string password, CryptoAlgorithms alg, byte[] salt)
+        public KeySet DeriveSessionKeys(SecureString password, CryptoAlgorithms alg, byte[] salt)
         {
             Preconditions.CheckNotNull(password);
             Preconditions.CheckNotNull(alg);
@@ -57,7 +59,8 @@ namespace Crypto
 
 
             KeyDerivationPrf prf = alg.kdfAlg.prf;
-            byte[] sessionKey = KeyDerivation.Pbkdf2(password, salt, prf, this.iterCount, outputSizeBytes);
+            string passwordString = StringUtils.GetStringFromSecureString(password);
+            byte[] sessionKey = KeyDerivation.Pbkdf2(passwordString, salt, prf, this.iterCount, outputSizeBytes);
             Buffer.BlockCopy(sessionKey, 0, encKey, 0, encSizeBytes);
             Buffer.BlockCopy(sessionKey, encSizeBytes, macKey, 0, macSizeBytes);
             return new KeySet(encKey, macKey, salt);
@@ -86,7 +89,7 @@ namespace Crypto
             return payload;
         }
 
-        public Secret Protect(ref string password, CryptoAlgorithms alg, string secretId, byte[] secretBytes, string tag = "Default")
+        public Secret Protect(SecureString password, CryptoAlgorithms alg, string secretId, byte[] secretBytes, string tag = "Default")
         {
            Preconditions.CheckNotNull(password);
            Preconditions.CheckNotNull(alg);
@@ -103,7 +106,7 @@ namespace Crypto
            }
 
            // Derive session keys to protect secret
-           KeySet sessionKeys = this.GetSessionKeys(ref password, alg);
+           KeySet sessionKeys = this.GetSessionKeys(password, alg);
         
            // Generate unique IV (or Nonce) for this secret based on given encryption algorithm
            byte[] iv = new byte[alg.encAlg.blockSizeBytes];
@@ -135,7 +138,7 @@ namespace Crypto
            return new Secret(b64AlgIds, secretId, b64EncryptedStr, b64Salt, b64Iv, DateTime.UtcNow, tag, b64Mac);
         }
 
-        public byte[] Unprotect(ref string password, Secret secret)
+        public byte[] Unprotect(SecureString password, Secret secret)
         {
             Preconditions.CheckNotNull(password);
             Preconditions.CheckNotNull(secret);
@@ -150,7 +153,7 @@ namespace Crypto
             
             // Derive potential session keys from given data
             CryptoAlgorithms cryptoAlg = CryptoAlgorithms.InitFromAlgId(algIds);
-            KeySet sessionKeys = DeriveSessionKeys(ref password, cryptoAlg, salt);
+            KeySet sessionKeys = DeriveSessionKeys(password, cryptoAlg, salt);
 
             // check integrity first
             byte[] payload = GetCanonicalizedPayload(algIds, salt, ivOrNonce, secretId, ciphertext);
