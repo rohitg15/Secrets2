@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Crypto\Crypto.csproj" />
     <ProjectReference Include="..\Models\Models.csproj" />
+    <ProjectReference Include="..\Dal\Dal.csproj" />
   </ItemGroup>
 
 </Project>

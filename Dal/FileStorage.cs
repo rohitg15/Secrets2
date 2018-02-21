@@ -22,16 +22,15 @@ namespace Dal
         public Secret ReadSecret(string secretId)
         {
             Preconditions.CheckNotNull(secretId);
-            
+
             byte[] digestBytes = StringUtils.GetBytes(HashProvider.GetSha256Digest(secretId));
-            string fileName = StringUtils.GetHexFromBytes(digestBytes);
-            Console.WriteLine("Here {0} , {1}\n", fileName, secretId );
-            string filePath = Path.Combine(this.rootDir, fileName, ".json");
+            string fileName = "." + StringUtils.GetHexFromBytes(digestBytes) + ".json";
             string secretData = null;
             Secret secret = null;
 
             try
             {
+                string filePath = Path.Combine(this.rootDir, fileName);
                 secretData = File.ReadAllText(filePath);
             }
             catch (System.Exception)
@@ -55,10 +54,11 @@ namespace Dal
             Preconditions.CheckNotNull(secret);
 
             byte[] digestBytes = StringUtils.GetBytes(HashProvider.GetSha256Digest(secret.secretId));
-            string fileName = StringUtils.GetHexFromBytes(digestBytes);
-            string filePath = Path.Combine(this.rootDir, fileName, ".json");
+            string fileName = "." + StringUtils.GetHexFromBytes(digestBytes) + ".json";
+                
             try
             {
+                string filePath = Path.Combine(this.rootDir, fileName);
                 string secretData = JsonConvert.SerializeObject(secret);
                 File.WriteAllText(filePath, secretData);
             }
