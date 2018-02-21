@@ -207,8 +207,6 @@ namespace Crypto
             this.subKeySizeBytes = subkeySize;
             this.iterCount = iterCount;
         }
-        
-
     }
 
    public enum EncryptionAlgorithmType 
