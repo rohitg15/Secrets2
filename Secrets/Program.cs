@@ -36,33 +36,33 @@ namespace Secrets
             return new FileStorage(rootDir);
         }
 
-        private static SecureString ReadPassword()
-        {    
-            var password = new SecureString();
-            while (true)
-            {
-                ConsoleKeyInfo i = Console.ReadKey(true);
-                if (i.Key == ConsoleKey.Enter)
-                {
-                    break;
-                }
-                else if (i.Key == ConsoleKey.Backspace)
-                {
-                    if (password.Length > 0)
-                    {
-                        password.RemoveAt(password.Length - 1);
-                        Console.Write("\b \b");
-                    }
-                }
-                else
-                {
-                    password.AppendChar(i.KeyChar);
-                    Console.Write("*");
-                }
-            }
-            password.MakeReadOnly();
-            return password;
-        }
+        // private static SecureString ReadPassword()
+        // {    
+        //     var password = new SecureString();
+        //     while (true)
+        //     {
+        //         ConsoleKeyInfo i = Console.ReadKey(true);
+        //         if (i.Key == ConsoleKey.Enter)
+        //         {
+        //             break;
+        //         }
+        //         else if (i.Key == ConsoleKey.Backspace)
+        //         {
+        //             if (password.Length > 0)
+        //             {
+        //                 password.RemoveAt(password.Length - 1);
+        //                 Console.Write("\b \b");
+        //             }
+        //         }
+        //         else
+        //         {
+        //             password.AppendChar(i.KeyChar);
+        //             Console.Write("*");
+        //         }
+        //     }
+        //     password.MakeReadOnly();
+        //     return password;
+        // }
 
         static void Main(string[] args)
         {
@@ -75,7 +75,7 @@ namespace Secrets
 
             string password = "";
             Console.Write("Enter Password:");
-            SecureString passwd = ReadPassword();
+            SecureString passwd = StringUtils.ReadSecretString();
             password = passwd.ToString();
             Console.Write("\n");
 
@@ -152,7 +152,8 @@ namespace Secrets
                         Console.Write("\n");
 
                         Console.Write("Enter Secret:");
-                        string secretStr = Console.ReadLine();
+                        SecureString secretString = StringUtils.ReadSecretString();
+                        string secretStr = StringUtils.GetStringFromSecureString(secretString);
                         Console.Write("\n");
 
                         Console.Write("Enter tag(optional):");
