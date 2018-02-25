@@ -79,13 +79,16 @@ namespace Dal
                 {
                     string secretJson = File.ReadAllText(file);
                     secret = JsonConvert.DeserializeObject<Secret>(secretJson);
+                    if (secret != null)
+                    {
+                        secrets.Add(secret);
+                    }
                 }
                 catch(System.Exception)
                 {
                     Console.WriteLine("Corrupt/Bad database.");
                     throw;
                 }
-                secrets.Add(secret);
             }
             return secrets;
         }

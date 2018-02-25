@@ -64,7 +64,6 @@ namespace Crypto
             Buffer.BlockCopy(sessionKey, 0, encKey, 0, encSizeBytes);
             Buffer.BlockCopy(sessionKey, encSizeBytes, macKey, 0, macSizeBytes);
             return new KeySet(encKey, macKey, salt);
-        
         }
 
         public byte[] GetCanonicalizedPayload(byte[] algs, byte[] salt, byte[] ivOrNonce, byte[] secretId, byte[] encSecret)
