@@ -7,12 +7,26 @@ using Microsoft.Extensions.CommandLineUtils;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using System.Collections.Generic;
 using System.Security;
+using System.Diagnostics;
 
 namespace Secrets
 {
     
     class Program
     {
+
+        private static void AsciiArt()
+        {
+            Console.WriteLine();
+            Console.WriteLine("========== Secrets ==========");
+            Console.WriteLine();
+            Console.WriteLine(@"     /===\          ^");
+            Console.WriteLine(@"   -/ O   \++++++++++\");
+            Console.WriteLine(@"  ==       ============>>>>o");
+            Console.WriteLine(@"   -\ O   /++++++++++/  |||");
+            Console.WriteLine(@"     \===/");
+            Console.WriteLine();
+        }
 
         private static SecretsManager InitSecretsManager()
         {
@@ -36,43 +50,53 @@ namespace Secrets
             return new FileStorage(rootDir);
         }
 
-        // private static SecureString ReadPassword()
-        // {    
-        //     var password = new SecureString();
-        //     while (true)
-        //     {
-        //         ConsoleKeyInfo i = Console.ReadKey(true);
-        //         if (i.Key == ConsoleKey.Enter)
-        //         {
-        //             break;
-        //         }
-        //         else if (i.Key == ConsoleKey.Backspace)
-        //         {
-        //             if (password.Length > 0)
-        //             {
-        //                 password.RemoveAt(password.Length - 1);
-        //                 Console.Write("\b \b");
-        //             }
-        //         }
-        //         else
-        //         {
-        //             password.AppendChar(i.KeyChar);
-        //             Console.Write("*");
-        //         }
-        //     }
-        //     password.MakeReadOnly();
-        //     return password;
-        // }
+        private static void CopyToOsxClipboard(byte[] secretBytes)
+        {
+            string secretData = StringUtils.GetString(secretBytes);
+            string cmd = String.Format("echo '{0}' | pbcopy", secretData);
+            var process = new Process()
+            {
+                StartInfo = new ProcessStartInfo()
+                {
+                    FileName = "/bin/bash",
+                    Arguments = $"-c \"{cmd}\"",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                } 
+            };
+
+            process.Start();
+            process.WaitForExit();
+            if (process.ExitCode != 0)
+            {
+                string result = process.StandardError.ReadToEnd();
+                string errMsg = String.Format("Error copying output to clipboard: {0}", result);
+                throw new System.Exception(errMsg);
+            }
+        }
+
+        private static void DisplaySecret(byte[] secretBytes)
+        {
+            switch(OsUtils.GetCurrentPlatform())
+            {
+                case OsPlatform.OsX:
+                {
+                    CopyToOsxClipboard(secretBytes);
+                    Console.WriteLine("Secret value copied to clipboard!");
+                    break;
+                }
+                default:
+                {
+                    string secretData = StringUtils.GetString(secretBytes);
+                    Console.WriteLine("Secret value > {0}", secretData);
+                    break;
+                }
+            }
+        }
 
         static void Main(string[] args)
         {
-
-            String helpStr = "---------- Secrets ----------\n";
-            helpStr +=       "1. Display Secret Ids\n";
-            helpStr +=       "2. Get Secret\n";
-            helpStr +=       "3. Put Secret\n";
-            helpStr +=       "4. Quit\n";
-
             string password = "";
             Console.Write("Enter Password:");
             SecureString passwd = StringUtils.ReadSecretString();
@@ -86,6 +110,13 @@ namespace Secrets
             int choice = 0;
             do
             {
+                String helpStr = "========== help ==========\n";
+                helpStr +=       "1. Display Secret Ids\n";
+                helpStr +=       "2. Get Secret\n";
+                helpStr +=       "3. Put Secret\n";
+                helpStr +=       "4. Quit\n";
+
+                AsciiArt();
                 Console.WriteLine(helpStr);
                 Console.Write(">>");
                 choice = Int32.Parse(Console.ReadLine());
@@ -138,8 +169,7 @@ namespace Secrets
                             Console.WriteLine("Wrong Password. Secret Decryption failed!");
                             return;
                         }
-                        string secretData = StringUtils.GetString(retrievedSecretBytes);
-                        Console.WriteLine("Secret value > {0}", secretData);
+                        DisplaySecret(retrievedSecretBytes);
                         Console.Write("\n");
                         break;
                     }
@@ -189,8 +219,6 @@ namespace Secrets
                 }
                 
             } while (true);
-
-
         }
     }
 }
