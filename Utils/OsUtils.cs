@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -39,6 +40,39 @@ namespace Utils
                 throw new System.Exception("Unknown OS platform");
             }
         }
+
+        
+        public static void ExecuteCmd(string exe, string args)
+        {
+            Preconditions.CheckNotNull(exe);
+            Preconditions.CheckNotNull(args);
+
+            var process = new Process()
+            {
+                // shell execute must always be false
+                // secret data is integrity protected, which prevents attacker from injecting
+                // arbitrary commands in the db to gain code execution
+                StartInfo = new ProcessStartInfo()
+                {
+                    FileName = exe,
+                    Arguments = args,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                } 
+            };
+
+            process.Start();
+            process.WaitForExit();
+            if (process.ExitCode != 0)
+            {
+                string result = process.StandardError.ReadToEnd();
+                string errMsg = String.Format("Error copying output to clipboard: {0}", result);
+                throw new System.Exception(errMsg);
+            }
+        }
+
+        
     }
 
     public enum OsPlatform
