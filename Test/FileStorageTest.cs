@@ -3,9 +3,12 @@ using Dal;
 using System;
 using System.Linq;
 using Models;
+using Utils;
 using Crypto;
 using System.Security;
+using System.IO;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using System.Security.Cryptography;
 
 
 namespace Test
@@ -142,6 +145,50 @@ namespace Test
             byte[] retrievedSecretBytes = decryptionManager.Unprotect(ref password, actualSecret);
             Assert.Equal(secretBytes.Length, retrievedSecretBytes.Length);
             Assert.Equal(secretBytes, retrievedSecretBytes);
+        }
+
+        [Fact]
+        public void DeleteSecretNullSecretId()
+        {
+            Assert.Throws<ArgumentNullException>(
+                () =>
+                    this.dataStore.DeleteSecret(null)
+            );
+        }
+
+        [Fact]
+        public void DeleteSecretMissingFile()
+        {
+            // this code is expected to not throw since .NET's File.Delete()
+            // does not throw in the event of an invalid file name
+            this.dataStore.DeleteSecret("THis_secret_Id_Does_Not_Exist!!!!");
+        }
+
+        [Fact]
+        public void DeleteSecretFile()
+        {
+            // generate random secretId
+            var csprng = RandomNumberGenerator.Create();
+            byte[] secretIdBytes = new byte[16];
+            csprng.GetBytes(secretIdBytes);
+            string secretId = StringUtils.GetString(secretIdBytes);
+
+            // generate secretPath
+            byte[] digestBytes = StringUtils.GetBytes(HashProvider.GetSha256Digest(secretId));
+            string fileName = "." + StringUtils.GetHexFromBytes(digestBytes) + ".json";
+            string secretFilePath = Path.Combine(this.rootDir, fileName);   
+            
+            // create file at secretPath
+            using(FileStream fs = File.Create(secretFilePath))
+            {
+                fs.Write(secretIdBytes, 0, secretIdBytes.Length);
+            }
+
+            // when
+            this.dataStore.DeleteSecret(secretId);
+
+            // then
+            Assert.True(false == File.Exists(secretFilePath));
         }
 
 

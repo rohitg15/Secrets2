@@ -10,5 +10,6 @@ namespace Dal
         Secret ReadSecret(string secretId);
         void WriteSecret(Secret secret);
         List<Secret> ListSecrets();
+        void DeleteSecret(string secretId);
     }
 }

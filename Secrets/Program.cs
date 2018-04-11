@@ -114,7 +114,8 @@ namespace Secrets
                 helpStr +=       "1. Display Secret Ids\n";
                 helpStr +=       "2. Get Secret\n";
                 helpStr +=       "3. Put Secret\n";
-                helpStr +=       "4. Quit\n";
+                helpStr +=       "4. Delete Secret\n";
+                helpStr +=       "5. Quit\n";
 
                 AsciiArt();
                 Console.WriteLine(helpStr);
@@ -209,6 +210,13 @@ namespace Secrets
                         }
                         Console.WriteLine("Stored Secret successfully!");
                         Console.Write("\n");
+                        break;
+                    }
+                    case 4:
+                    {
+                        Console.Write("Enter secret id (it will be deleted permanently):");
+                        string secretId = Console.ReadLine();
+                        storageManager.DeleteSecret(secretId);
                         break;
                     }
                     default:

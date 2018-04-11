@@ -22,22 +22,18 @@ namespace Dal
         public Secret ReadSecret(string secretId)
         {
             Preconditions.CheckNotNull(secretId);
-
-            byte[] digestBytes = StringUtils.GetBytes(HashProvider.GetSha256Digest(secretId));
-            string fileName = "." + StringUtils.GetHexFromBytes(digestBytes) + ".json";
+            string secretPath = FindSecretPath(secretId);
             string secretData = null;
-            Secret secret = null;
-
             try
             {
-                string filePath = Path.Combine(this.rootDir, fileName);
-                secretData = File.ReadAllText(filePath);
+                secretData = File.ReadAllText(secretPath);
             }
             catch (System.Exception)
             {
                 throw new System.Exception("secret not found!");
             }
-
+            
+            Secret secret = null;
             try
             {
                 secret = JsonConvert.DeserializeObject<Secret>(secretData);
@@ -92,6 +88,33 @@ namespace Dal
             }
             return secrets;
         }
+
+        public string FindSecretPath(string secretId)
+        {
+            Preconditions.CheckNotNull(secretId);
+
+            byte[] digestBytes = StringUtils.GetBytes(HashProvider.GetSha256Digest(secretId));
+            string fileName = "." + StringUtils.GetHexFromBytes(digestBytes) + ".json";
+            return Path.Combine(this.rootDir, fileName);            
+        }
+
+        public void DeleteSecret(string secretId)
+        {
+            Preconditions.CheckNotNull(secretId);
+            string secretPath = FindSecretPath(secretId);
+            if (File.Exists(secretPath) == false)
+            {
+                Console.WriteLine("Secret with id {0} does not exist", secretId);
+            }
+            else
+            {
+                Console.WriteLine("Removing secret with id {0} from database", secretId);
+            }
+
+            // go ahead and call delete anyway to avoid race conditions
+            File.Delete(secretPath);
+        }
+
     }
 
 }
