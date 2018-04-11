@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using System.Collections.Generic;
 using System.Security;
 using System.Diagnostics;
+using System.Text;
 
 namespace Secrets
 {
@@ -50,16 +51,20 @@ namespace Secrets
             return new FileStorage(rootDir);
         }
 
-        private static void CopyToOsxClipboard(byte[] secretBytes)
+        private static void ExecuteCmd(string exe, string args)
         {
-            string secretData = StringUtils.GetString(secretBytes);
-            string cmd = String.Format("echo '{0}' | pbcopy", secretData);
+            Preconditions.CheckNotNull(exe);
+            Preconditions.CheckNotNull(args);
+
             var process = new Process()
             {
+                // shell execute must always be false
+                // secret data is integrity protected, which prevents attacker from injecting
+                // arbitrary commands in the db to gain code execution
                 StartInfo = new ProcessStartInfo()
                 {
-                    FileName = "/bin/bash",
-                    Arguments = $"-c \"{cmd}\"",
+                    FileName = exe,
+                    Arguments = args,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
@@ -78,11 +83,28 @@ namespace Secrets
 
         private static void DisplaySecret(byte[] secretBytes)
         {
+            string cmd = "";
+            string args = "";
+            string exe = "";
             switch(OsUtils.GetCurrentPlatform())
             {
                 case OsPlatform.OsX:
                 {
-                    CopyToOsxClipboard(secretBytes);
+                    string secretData = StringUtils.GetString(secretBytes);
+                    cmd = String.Format("echo '{0}' | pbcopy", secretData);
+                    exe = "/bin/bash";
+                    args = $"-c \"{cmd}\"";
+                    ExecuteCmd(exe, args);
+                    Console.WriteLine("Secret value copied to clipboard!");
+                    break;
+                }
+                case OsPlatform.Windows:
+                {
+                    string secretData = StringUtils.GetString(secretBytes);
+                    cmd = String.Format("echo {0} | clip", secretData);
+                    exe = "cmd.exe";
+                    args = $"/c \"{cmd}\"";
+                    ExecuteCmd(exe, args);
                     Console.WriteLine("Secret value copied to clipboard!");
                     break;
                 }
