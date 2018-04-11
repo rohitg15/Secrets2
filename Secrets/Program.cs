@@ -55,6 +55,7 @@ namespace Secrets
                                                                 );  
                 try
                 {
+                    resetSession = false;
                     sessionManager.StartSession();
                     sessionManager.Repl(out resetSession);
                 }
