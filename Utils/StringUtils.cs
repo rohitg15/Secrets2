@@ -56,6 +56,16 @@ namespace Utils
             return normalString;
         }
 
+        public static SecureString ToSecureString(string str)
+        {
+            SecureString secureStr = new SecureString();
+            foreach(char ch in str)
+            {
+                secureStr.AppendChar(ch);
+            }
+            return secureStr;
+        }
+
         public static SecureString ReadSecretString()
         {    
             var password = new SecureString();

@@ -8,8 +8,10 @@ namespace Dal
     public interface IStorage
     {
         Secret ReadSecret(string secretId);
-        void WriteSecret(Secret secret);
+        void WriteSecret(Secret secret, bool overwrite=false);
         List<Secret> ListSecrets();
         void DeleteSecret(string secretId);
+
+        string GetProviderName();
     }
 }

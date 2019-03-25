@@ -13,7 +13,8 @@ namespace Utils
             "3. Put Secret",
             "4. Delete Secret",
             "5. Reset Session",
-            "6. Quit Program"
+            "6. Cloud Synchronization",
+            "7. Quit Program"
         );
         public static void DisplayHelpStr()
         {

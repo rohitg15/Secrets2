@@ -64,6 +64,7 @@ namespace Secrets
                     sessionManager.ExitSession();
                 }
             } while (resetSession);
+            
         }
     }
 }

@@ -14,6 +14,8 @@ namespace Secrets
         private CryptoAlgorithms algs;
         private IStorage storageManager;
 
+        private IStorage cloudStorageManager;
+
         private SecureString passwd;
 
         private static readonly string sessionDisplay = String.Format(
@@ -76,6 +78,11 @@ namespace Secrets
                         resetSession = true;
                         Console.WriteLine("<<<<<<<<<< Ending current Session >>>>>>>>>>");
                         return;
+                    }
+                    case 6:
+                    {
+                        this.CloudSynchronize();
+                        break;
                     }
                     default:
                     {
@@ -180,6 +187,38 @@ namespace Secrets
             Console.Write("Enter secret id (it will be deleted permanently):");
             string secretId = Console.ReadLine();
             storageManager.DeleteSecret(secretId);
+        }
+
+        public void CloudSynchronize()
+        {
+            Console.WriteLine("Searching for Cloud Provider Secret");
+            string secretId = "dropbox_access_token";
+            Secret secret = null;
+            byte[] retrievedSecretBytes = null;
+            try
+            {
+                secret = storageManager.ReadSecret(secretId);
+            }
+            catch(Exception)
+            {
+                Console.WriteLine("Secret with id {0} not found in db. Insert access token with id {1} to enable dropbox sync", secretId, secretId);
+                return;
+            }
+
+            try
+            {
+                retrievedSecretBytes = secretsManager.Unprotect(ref this.passwd, secret);
+            }
+            catch(Exception)
+            {
+                Console.WriteLine("Wrong Password. Secret Decryption failed!");
+                return;
+            }
+            SecureString accessToken = StringUtils.ToSecureString(StringUtils.GetString(retrievedSecretBytes));
+                    
+            this.cloudStorageManager = new DropboxStorage(accessToken);
+            Console.WriteLine("Initialized provider : {0}", this.cloudStorageManager.GetProviderName());
+            this.cloudStorageManager.WriteSecret(null);
         }
 
         public void ExitSession()

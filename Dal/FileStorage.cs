@@ -45,7 +45,7 @@ namespace Dal
             return secret;
         }
 
-        public void WriteSecret(Secret secret)
+        public void WriteSecret(Secret secret, bool overwrite = false)
         {
             Preconditions.CheckNotNull(secret);
 
@@ -113,6 +113,11 @@ namespace Dal
 
             // go ahead and call delete anyway to avoid race conditions
             File.Delete(secretPath);
+        }
+
+        public string GetProviderName()
+        {
+            return "FileStorageProvider";
         }
 
     }
