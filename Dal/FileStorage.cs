@@ -60,7 +60,7 @@ namespace Dal
             }
             catch(System.Exception)
             {
-                throw new System.Exception("Failed to write secret!");
+                throw new System.Exception("Failed to write secret for provider - " + GetProviderName());
             }
         }
 

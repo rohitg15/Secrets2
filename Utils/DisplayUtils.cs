@@ -6,14 +6,14 @@ namespace Utils
     {
 
         static readonly string helpStr = String.Format(
-            "{0}\n{1},\n{2}\n{3}\n{4}\n{5}\n{6}",
+            "{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n{6}\n{7}\n",
             "========== help ==========",
-            "1. Display Secret Ids",
-            "2. Get Secret",
-            "3. Put Secret",
-            "4. Delete Secret",
+            "1. Sync & list Secret Ids [Local + Remote secrets]",
+            "2. Get Local Secret",
+            "3. Put Secret [Local + Remote]",
+            "4. Delete Secret [Local + Remote]",
             "5. Reset Session",
-            "6. Cloud Synchronization",
+            "6. Upload Local Secrets to Cloud Service",
             "7. Quit Program"
         );
         public static void DisplayHelpStr()

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using Models;
 using System.Security;
+using System.Threading.Tasks;
 
 namespace Secrets
 {
@@ -14,10 +15,11 @@ namespace Secrets
         private CryptoAlgorithms algs;
         private IStorage storageManager;
 
-        private IStorage cloudStorageManager;
+        private DropboxStorage cloudStorageManager;
 
         private SecureString passwd;
 
+        List<Secret> localSecrets_;
         private static readonly string sessionDisplay = String.Format(
                 "<<<<<<<<<< Starting new Session >>>>>>>>>>\n # {0}\n # {1}", 
                 "Enter old password to restore previous session and retrieve secrets stored in that session OR",
@@ -28,6 +30,8 @@ namespace Secrets
             this.secretsManager = Preconditions.CheckNotNull(secretsManager);
             this.algs = Preconditions.CheckNotNull(algs);
             this.storageManager = Preconditions.CheckNotNull(storageManager);
+            this.localSecrets_ = new List<Secret>();
+           
         }
 
         public void StartSession()
@@ -36,6 +40,7 @@ namespace Secrets
             Console.Write("Enter Password:");
             this.passwd = StringUtils.ReadSecretString();
             Console.Write("\n\n");
+            InitializeCloudStorage();
         }
 
         public void Repl(out bool resetSession)
@@ -81,7 +86,7 @@ namespace Secrets
                     }
                     case 6:
                     {
-                        this.CloudSynchronize();
+                        this.UploadLocalSecrets();
                         break;
                     }
                     default:
@@ -95,16 +100,42 @@ namespace Secrets
             } while (true);
         }
 
+        private void InitializeLocalSessionSecrets()
+        {
+            if (localSecrets_.Count == 0)
+            {
+                List<Secret> secrets = storageManager.ListSecrets();
+                localSecrets_.AddRange(secrets);
+            }
+            PersistRemoteSecrets(localSecrets_).Wait();
+        }
+
+        public async Task PersistRemoteSecrets(List<Secret> localSecrets)
+        {
+             // List remote secrets
+            List<Secret> remoteSecrets = await this.cloudStorageManager.GetSecretsAsync(localSecrets);
+            
+            localSecrets_.AddRange(remoteSecrets);
+
+            // persist remote secrets locally
+            foreach(var remoteSecret in remoteSecrets)
+            {
+                Console.WriteLine(remoteSecret.secretId);
+                this.storageManager.WriteSecret(remoteSecret);
+            }
+        }
+
         public void ListSecrets()
         {
-                        
-            List<Secret> secrets = storageManager.ListSecrets();
+            InitializeLocalSessionSecrets();
+            
+
             int count = 0;
             Console.WriteLine();
-            Console.WriteLine("===== {0} secrets found =====", secrets.Count);
-            if  (secrets.Count != 0)
+            Console.WriteLine("===== {0} secrets found =====", localSecrets_.Count);
+            if  (localSecrets_.Count != 0)
             {
-                foreach(Secret secret in secrets)
+                foreach(Secret secret in localSecrets_)
                 {
                     Console.WriteLine("{0}.{1}", ++count, secret.secretId);
                 }
@@ -170,15 +201,23 @@ namespace Secrets
             try
             {
                 secret = secretsManager.Protect(ref this.passwd, algs, secretId, secretBytes, tag);
-                // write secret to persistent storage
-                storageManager.WriteSecret(secret);
+                
+                // write secret to storage layers
+                
+                this.cloudStorageManager.WriteSecret(secret, true);
+                Console.WriteLine("Stored Secret successfully in - " + this.cloudStorageManager.GetProviderName());
+                
+                
+                this.storageManager.WriteSecret(secret);
+                Console.WriteLine("Stored Secret successfully in - " + this.storageManager.GetProviderName());
+                
             }
             catch(Exception)
             {
                 Console.WriteLine("Error: Could not store secret!");
                 return;
             }
-            Console.WriteLine("Stored Secret successfully!");
+            this.localSecrets_.Add(secret);
             Console.Write("\n");
         }
 
@@ -187,9 +226,19 @@ namespace Secrets
             Console.Write("Enter secret id (it will be deleted permanently):");
             string secretId = Console.ReadLine();
             storageManager.DeleteSecret(secretId);
+            this.cloudStorageManager.DeleteSecret(secretId);
+            Console.WriteLine("Removed Secret : {0}", secretId);
+                
+            Secret item = this.localSecrets_.Find(s => s.secretId == secretId);
+            if (item == null)
+            {
+                Console.WriteLine("Couldn't read secret from hash localSecrets_");
+            }
+            this.localSecrets_.Remove(item);
+        
         }
 
-        public void CloudSynchronize()
+        public void InitializeCloudStorage()
         {
             Console.WriteLine("Searching for Cloud Provider Secret");
             string secretId = "dropbox_access_token";
@@ -218,7 +267,16 @@ namespace Secrets
                     
             this.cloudStorageManager = new DropboxStorage(accessToken);
             Console.WriteLine("Initialized provider : {0}", this.cloudStorageManager.GetProviderName());
-            this.cloudStorageManager.WriteSecret(null);
+        }
+
+        public void UploadLocalSecrets()
+        {
+            List<Secret> secrets = storageManager.ListSecrets();
+            foreach(var secret in secrets)
+            {
+                this.cloudStorageManager.WriteSecret(secret, true);
+                Console.WriteLine("Uploaded secret : {0} to provider : {1}", secret.secretId, this.cloudStorageManager.GetProviderName());
+            }
         }
 
         public void ExitSession()
