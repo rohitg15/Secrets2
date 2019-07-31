@@ -128,14 +128,20 @@ namespace Secrets
         public void ListSecrets()
         {
             InitializeLocalSessionSecrets();
-            
 
             int count = 0;
             Console.WriteLine();
             Console.WriteLine("===== {0} secrets found =====", localSecrets_.Count);
-            if  (localSecrets_.Count != 0)
+            
+            // sort based on secret id - test and avoid copy if possible
+            var localSecrets = new List<Secret>(localSecrets_);
+            localSecrets.Sort(delegate(Secret a, Secret b){
+                return a.secretId.CompareTo(b.secretId);
+            });
+
+            if  (localSecrets.Count != 0)
             {
-                foreach(Secret secret in localSecrets_)
+                foreach(Secret secret in localSecrets)
                 {
                     Console.WriteLine("{0}.{1}", ++count, secret.secretId);
                 }
@@ -206,7 +212,6 @@ namespace Secrets
                 
                 this.cloudStorageManager.WriteSecret(secret, true);
                 Console.WriteLine("Stored Secret successfully in - " + this.cloudStorageManager.GetProviderName());
-                
                 
                 this.storageManager.WriteSecret(secret);
                 Console.WriteLine("Stored Secret successfully in - " + this.storageManager.GetProviderName());
